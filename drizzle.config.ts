@@ -1,12 +1,13 @@
-import { type Config } from "drizzle-kit";
+import { type Config } from "drizzle-kit"
 
-import { env } from "~/env.mjs";
+import { env } from "~/env.mjs"
 
 export default {
   schema: "./src/server/db/schema.ts",
-  driver: "mysql2",
+  driver: "pg",
+  out: "./migrations",
   dbCredentials: {
-    connectionString: env.DATABASE_URL,
+    connectionString: env.DATABASE_URL
   },
-  tablesFilter: ["cxtnipp_*"],
-} satisfies Config;
+  tablesFilter: ["cxtnipp_*"]
+} satisfies Config
