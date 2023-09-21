@@ -1,21 +1,56 @@
+import { signIn } from "next-auth/react"
 import Head from "next/head"
-import Image from "next/image"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { Button } from "~/components/ui/button"
+import { api } from "~/utils/api"
+import { useRouter } from "next/router"
+import Link from "next/link"
 
-type User = {
-  name: string
-  title: string
-  email: string
+const signUpSchema = z
+  .object({
+    email: z.string().email(),
+    password: z.string().min(8).max(50),
+    passwordConfirmation: z.string().min(8).max(50)
+  })
+  .refine((data) => data.passwordConfirmation === data.password, {
+    message: "Passwords don't match",
+    path: ["passwordConfirmation"]
+  })
 
-  photoUrl: string
-}
+type SignUpFormValues = z.infer<typeof signUpSchema>
 
 export default function Home() {
-  const users: User[] = [
-    { name: "John Doe", title: "CEO", email: "", photoUrl: "" },
-    { name: "John Doe", title: "CEO", email: "", photoUrl: "" },
-    { name: "John Doe", title: "CEO", email: "", photoUrl: "" }
-  ]
+  const router = useRouter()
+
+  const { mutate } = api.user.create.useMutation({
+    onSuccess: async (_, { password, email }) => {
+      const response = await signIn("credentials", {
+        email,
+        password,
+        redirect: false
+      })
+
+      if (response?.ok) {
+        await router.push("/dashboard")
+      }
+    }
+  })
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors }
+  } = useForm<SignUpFormValues>({
+    resolver: zodResolver(signUpSchema)
+  })
+
+  console.log(errors)
+
+  const onSubmit = (data: SignUpFormValues) => {
+    mutate(data)
+  }
 
   return (
     <>
@@ -25,7 +60,24 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="grid h-full place-items-center">
-        <Button>Helelelelelelelele</Button>
+        <form className="" onSubmit={handleSubmit(onSubmit)}>
+          <input placeholder="email" type="text" {...register("email")} />
+
+          <input
+            placeholder="password"
+            type="password"
+            {...register("password")}
+          />
+
+          <input
+            placeholder="confirm password"
+            type="password"
+            {...register("passwordConfirmation")}
+          />
+
+          <Button>sign up</Button>
+        </form>
+        <Link href="/login">Login</Link>
       </main>
     </>
   )
