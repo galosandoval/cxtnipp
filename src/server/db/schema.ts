@@ -9,3 +9,11 @@ export const users = pgTable("user", {
   image: text("image"),
   password: text("password").notNull()
 })
+
+export const profileCard = pgTable("profile_card", {
+  id: text("id").notNull().primaryKey(),
+  userId: text("user_id").notNull(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  image: text("image").notNull()
+})
