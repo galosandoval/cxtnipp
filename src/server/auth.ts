@@ -85,7 +85,6 @@ export const authOptions: NextAuthOptions = {
         if (!user || user.length === 0) {
           return null
         }
-        console.log(user)
         const isValidPassword = await compare(
           input.password,
           user[0]?.password ?? ""

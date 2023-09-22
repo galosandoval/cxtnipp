@@ -7,10 +7,12 @@ import { Button } from "~/components/ui/button"
 import { api } from "~/utils/api"
 import { useRouter } from "next/router"
 import Link from "next/link"
+import { ErrorMessage } from "@hookform/error-message"
+import { MyErrorMessages } from "~/components/ui/my-error-messages"
 
 const signUpSchema = z
   .object({
-    email: z.string().email(),
+    email: z.string().email().max(255),
     password: z.string().min(8).max(50),
     passwordConfirmation: z.string().min(8).max(50)
   })
@@ -24,6 +26,15 @@ type SignUpFormValues = z.infer<typeof signUpSchema>
 export default function Home() {
   const router = useRouter()
 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setError
+  } = useForm<SignUpFormValues>({
+    resolver: zodResolver(signUpSchema)
+  })
+
   const { mutate } = api.user.create.useMutation({
     onSuccess: async (_, { password, email }) => {
       const response = await signIn("credentials", {
@@ -31,19 +42,17 @@ export default function Home() {
         password,
         redirect: false
       })
-
+      console.log(response)
       if (response?.ok) {
         await router.push("/dashboard")
       }
+    },
+    onError: (error) => {
+      console.log(error.message)
+      setError("email", {
+        message: error.message
+      })
     }
-  })
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors }
-  } = useForm<SignUpFormValues>({
-    resolver: zodResolver(signUpSchema)
   })
 
   console.log(errors)
@@ -62,6 +71,7 @@ export default function Home() {
       <main className="grid h-full place-items-center">
         <form className="" onSubmit={handleSubmit(onSubmit)}>
           <input placeholder="email" type="text" {...register("email")} />
+          <MyErrorMessages errors={errors} name={"email"} />
 
           <input
             placeholder="password"
@@ -69,11 +79,15 @@ export default function Home() {
             {...register("password")}
           />
 
+          <MyErrorMessages errors={errors} name={"password"} />
+
           <input
             placeholder="confirm password"
             type="password"
             {...register("passwordConfirmation")}
           />
+
+          <MyErrorMessages errors={errors} name={"passwordConfirmation"} />
 
           <Button>sign up</Button>
         </form>
